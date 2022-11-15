@@ -18,6 +18,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/phayes/freeport"
+
 	"github.com/inhies/go-bytesize"
 )
 
@@ -34,7 +36,7 @@ func (c *Config) Get(curthread int, port int) {
 	s_addr, err := net.ResolveTCPAddr("tcp", c.source_ip+":"+strconv.Itoa(port))
 	//log.Println("CUrerrer sa-addr", s_addr)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	transport := &http.Transport{
 		Dial: (&net.Dialer{
@@ -108,7 +110,11 @@ func main() {
 			i := i
 			go func() {
 				defer wg.Done()
-				c.Get(i, PORT+i)
+				port, err := freeport.GetFreePort()
+				if err != nil {
+					log.Println("Problem with finding openned port", err)
+				}
+				c.Get(i, port)
 			}()
 
 		}
