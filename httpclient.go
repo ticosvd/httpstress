@@ -18,8 +18,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/phayes/freeport"
-
 	"github.com/inhies/go-bytesize"
 )
 
@@ -29,11 +27,11 @@ type Config struct {
 	source_ip string
 }
 
-const PORT = 15000
+//const PORT = 15000
 
-func (c *Config) Get(curthread int, port int) {
+func (c *Config) Get(curthread int) {
 	//s_addr, err := net.ResolveTCPAddr("tcp", c.source_ip+":5555")
-	s_addr, err := net.ResolveTCPAddr("tcp", c.source_ip+":"+strconv.Itoa(port))
+	s_addr, err := net.ResolveTCPAddr("tcp", c.source_ip+":"+strconv.Itoa(0))
 	//log.Println("CUrerrer sa-addr", s_addr)
 	if err != nil {
 		log.Println(err)
@@ -110,16 +108,16 @@ func main() {
 			i := i
 			go func() {
 				defer wg.Done()
-				port, err := freeport.GetFreePort()
-				if err != nil {
-					log.Println("Problem with finding openned port", err)
-				}
-				c.Get(i, port)
+				//port, err := 0, nil
+				//			if err != nil {
+				//		log.Println("Problem with finding openned port", err)
+				//		}
+				c.Get(i)
 			}()
 
 		}
 		wg.Wait()
 	} else {
-		c.Get(1, 0)
+		c.Get(1)
 	}
 }
