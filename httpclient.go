@@ -4,6 +4,7 @@ package main
 	HTTP stress client
 	Version : 0.0.1
 	Date : 11.11.2022
+	12.11 . Added source address and range ports from 15000 (CONST PORT )
 
 */
 
@@ -11,7 +12,9 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -19,16 +22,37 @@ import (
 )
 
 type Config struct {
-	url     string
-	threads int
+	url       string
+	threads   int
+	source_ip string
 }
 
-func (c *Config) Get(curthread int) {
-	t1 := time.Now()
-	resp, err := http.Get(c.url)
+const PORT = 15000
 
+func (c *Config) Get(curthread int, port int) {
+	//s_addr, err := net.ResolveTCPAddr("tcp", c.source_ip+":5555")
+	s_addr, err := net.ResolveTCPAddr("tcp", c.source_ip+":"+strconv.Itoa(port))
+	//log.Println("CUrerrer sa-addr", s_addr)
 	if err != nil {
 		log.Fatal(err)
+	}
+	transport := &http.Transport{
+		Dial: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			LocalAddr: s_addr,
+		}).Dial,
+	}
+	client := http.Client{
+		Transport: transport,
+	}
+
+	t1 := time.Now()
+
+	//resp, err := http.Get(c.url)
+	resp, err := client.Get(c.url)
+	if err != nil {
+		log.Print("Error after get :", err)
 	}
 
 	defer resp.Body.Close()
@@ -36,7 +60,7 @@ func (c *Config) Get(curthread int) {
 	body, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Print("Thread #", curthread, " Error after Readall :", err)
 	}
 	cont := resp.ContentLength
 	t3 := time.Now().Sub(t1)
@@ -64,6 +88,8 @@ func (c *Config) Parse(body []byte) ([]string, error) {
 
 func main() {
 	var url = flag.String("url", "http://10.199.100.100:9443/", "Set server ")
+	var source_ip = flag.String("s", "0.0.0.0", "Set source IP  ")
+
 	var threads = flag.Int("t", 1, "Set threads")
 	var wg sync.WaitGroup
 	//resp, err := http.Get("http://webcode.me")
@@ -71,8 +97,9 @@ func main() {
 	flag.Parse()
 
 	c := Config{
-		url:     *url,
-		threads: *threads,
+		url:       *url,
+		threads:   *threads,
+		source_ip: *source_ip,
 	}
 
 	if c.threads != 1 {
@@ -81,12 +108,12 @@ func main() {
 			i := i
 			go func() {
 				defer wg.Done()
-				c.Get(i)
+				c.Get(i, PORT+i)
 			}()
 
 		}
 		wg.Wait()
 	} else {
-		c.Get(1)
+		c.Get(1, 0)
 	}
 }
