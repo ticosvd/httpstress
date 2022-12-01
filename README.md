@@ -1,8 +1,6 @@
 # httpstress
 
-htptclient - the generator HTTP traffci . It works with only HTTP traffc.
-
-Help about keys: 
+htptclient - the generator HTTP traffic . It works with only HTTP service.
 
 Usage of ./httpclient:
   -s string
