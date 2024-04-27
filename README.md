@@ -34,3 +34,4 @@ go run httpclient.go -url http://10.199.100.100:9443/rfc4 -t 4 -s 10.20.0.5
 2022/12/01 15:34:38 Thread 2 len response 5988060 and cont 5.71MB and elapsed  88, throughput 515.40MB  
 
 
+
